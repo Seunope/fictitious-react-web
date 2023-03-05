@@ -16,7 +16,6 @@ import {
   InputWrapper,
   StyledInput,
 } from '../commons';
-import { StyledLink } from 'baseui/link';
 
 import { useSignIn } from 'react-auth-kit';
 import { useFormik } from 'formik';
@@ -24,7 +23,7 @@ import axios, { AxiosError } from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function Login(props: any) {
+function Register(props: any) {
   const signIn = useSignIn();
   const navigate = useNavigate();
   const [error, setError] = useState('');
@@ -35,20 +34,12 @@ function Login(props: any) {
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BASE_URL}auth/login`,
+        `${process.env.REACT_APP_BASE_URL}user/signup`,
         values
       );
 
       console.log('GGG', response);
-      console.log('GYYYYYYYGG', response.data.token);
-
-      signIn({
-        token: response.data.token,
-        expiresIn: 360000,
-        tokenType: 'Bearer',
-        authState: { user: response.data.user, token: response.data.token },
-      });
-      navigate('/');
+      navigate('/login');
     } catch (err) {
       console.log('sdsdsds', err);
       if (err && err instanceof AxiosError)
@@ -62,6 +53,8 @@ function Login(props: any) {
   const formik = useFormik({
     initialValues: {
       email: '',
+      firstName: '',
+      lastName: '',
       password: '',
     },
     onSubmit,
@@ -73,8 +66,32 @@ function Login(props: any) {
 
       <InnerContainer>
         <form onSubmit={formik.handleSubmit}>
-          <HeadingXLarge>Hey, welcome back!</HeadingXLarge>
+          <HeadingXLarge>Hey, create an account!</HeadingXLarge>
           <ErrorText>{error}</ErrorText>
+
+          <InputWrapper>
+            <StyledInput
+              name="firstName"
+              value={formik.values.firstName}
+              onChange={formik.handleChange}
+              placeholder="First name"
+              clearOnEscape
+              size="large"
+              // type="email"
+            />
+          </InputWrapper>
+          <InputWrapper>
+            <StyledInput
+              name="lastName"
+              value={formik.values.lastName}
+              onChange={formik.handleChange}
+              placeholder="Last name"
+              clearOnEscape
+              size="large"
+              // type="email"
+            />
+          </InputWrapper>
+
           <InputWrapper>
             <StyledInput
               name="email"
@@ -100,14 +117,13 @@ function Login(props: any) {
 
           <InputWrapper>
             <Button size="large" kind="primary" isLoading={formik.isSubmitting}>
-              Login
+              Sign up
             </Button>
           </InputWrapper>
-          <StyledLink onClick={() => navigate('/register')}>Sign up</StyledLink>
         </form>
       </InnerContainer>
     </Container>
   );
 }
 
-export { Login };
+export { Register };
