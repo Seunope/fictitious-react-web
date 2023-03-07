@@ -1,14 +1,3 @@
-import { Button } from 'baseui/button';
-import { Input } from 'baseui/input';
-import styled from 'styled-components';
-import {
-  HeadingXXLarge,
-  HeadingXLarge,
-  HeadingLarge,
-  HeadingMedium,
-  HeadingSmall,
-  HeadingXSmall,
-} from 'baseui/typography';
 import {
   Container,
   ErrorText,
@@ -16,12 +5,13 @@ import {
   InputWrapper,
   StyledInput,
 } from '../commons';
-
-import { useSignIn } from 'react-auth-kit';
-import { useFormik } from 'formik';
-import axios, { AxiosError } from 'axios';
 import { useState } from 'react';
+import { useFormik } from 'formik';
+import { Button } from 'baseui/button';
+import axios, { AxiosError } from 'axios';
+import { useSignIn } from 'react-auth-kit';
 import { useNavigate } from 'react-router-dom';
+import { HeadingXXLarge, HeadingXLarge } from 'baseui/typography';
 
 function Register(props: any) {
   const signIn = useSignIn();
@@ -29,19 +19,15 @@ function Register(props: any) {
   const [error, setError] = useState('');
 
   const onSubmit = async (values: any) => {
-    console.log('Values: ', values);
     setError('');
-
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_BASE_URL}user/signup`,
         values
       );
 
-      console.log('GGG', response);
       navigate('/login');
     } catch (err) {
-      console.log('sdsdsds', err);
       if (err && err instanceof AxiosError)
         setError(err.response?.data.message);
       else if (err && err instanceof Error) setError(err.message);

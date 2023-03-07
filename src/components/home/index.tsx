@@ -1,29 +1,19 @@
 import axios from 'axios';
-import { Button } from 'baseui/button';
-import { HeadingXXLarge, HeadingXLarge } from 'baseui/typography';
-import { useSignOut, useAuthUser } from 'react-auth-kit';
-import { useNavigate } from 'react-router-dom';
-import { Container, ContainerHome } from '../commons';
+import { Card } from 'baseui/card';
 import { useStyletron } from 'baseui';
-import { Table } from 'baseui/table-semantic';
-import { FormControl } from 'baseui/form-control';
-import { Input } from 'baseui/input';
+import { Button } from 'baseui/button';
 import { StyledLink } from 'baseui/link';
-import { useFormik } from 'formik';
-
+import { ContainerHome } from '../commons';
+import { useNavigate } from 'react-router-dom';
+import { Table } from 'baseui/table-semantic';
+import { useSignOut, useAuthUser } from 'react-auth-kit';
+import { HeadingXXLarge, HeadingXLarge, HeadingLarge } from 'baseui/typography';
 import {
   HeaderNavigation,
   ALIGN,
   StyledNavigationList,
   StyledNavigationItem,
 } from 'baseui/header-navigation';
-
-import {
-  ErrorText,
-  InnerContainer,
-  InputWrapper,
-  StyledInput,
-} from '../commons';
 
 import { useState, useEffect } from 'react';
 
@@ -35,6 +25,22 @@ function Home() {
   const [trans, setTrans] = useState();
   const [error, setError] = useState('');
   const [walletBalance, setWalletBalance] = useState();
+  const [walletNumber, setWalletNumber] = useState();
+
+  const [formValues, setFormValues] = useState({
+    description: '',
+    reference: '',
+    amount: '',
+    platform: '',
+    type: 'credit',
+  });
+
+  const [formValuesDebit, setFormValuesDebit] = useState({
+    receiverWalletNumber: '',
+    reference: '',
+    amount: '',
+    type: 'debit',
+  });
 
   useEffect(() => {
     getWalletBalance();
@@ -45,30 +51,48 @@ function Home() {
     navigate('/login');
   };
 
-  const onSubmit = async (values: any) => {
-    console.log('Values: ', values);
-    setError('');
+  const handleSubmit = async (event: { preventDefault: () => void }) => {
+    event.preventDefault();
 
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_BASE_URL}user/signup`,
-        values
+      await axios.post(
+        `${process.env.REACT_APP_BASE_URL}transaction/fund`,
+        formValues,
+        {
+          headers: {
+            Authorization: `Bearer ${auth()?.token}`,
+          },
+        }
       );
-
-      console.log('GGG', response);
-      navigate('/login');
+      navigate('/');
+      getPayment();
     } catch (err) {
+      // setError(err?.message);
       console.log('Error: ', err);
     }
   };
 
-  const formik = useFormik({
-    initialValues: {
-      email: '',
-      password: '',
-    },
-    onSubmit,
-  });
+  const handleSubmitDebit = async (event: { preventDefault: () => void }) => {
+    event.preventDefault();
+
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_BASE_URL}transaction/send-money`,
+        formValuesDebit,
+        {
+          headers: {
+            Authorization: `Bearer ${auth()?.token}`,
+          },
+        }
+      );
+
+      navigate('/');
+      getPayment();
+    } catch (err) {
+      // setError(err?.message);
+      console.log('Error: ', err);
+    }
+  };
 
   const getPayment = async () => {
     try {
@@ -108,20 +132,9 @@ function Home() {
           },
         }
       );
-      console.log('response: ', response);
+      // console.log('response: ', response);
       setWalletBalance(response.data?.data?.balance);
-      const finalData = response.data?.data.map((t: any, index: number) => {
-        return [
-          index + 1,
-          t.description,
-          t.type,
-          t.amount,
-          t.reference,
-          t.createdAt,
-        ];
-      });
-      console.log('DATA', finalData);
-      setTrans(finalData);
+      setWalletNumber(response.data?.data?.walletNumber);
     } catch (err) {
       console.log('Error: ', err);
     }
@@ -141,9 +154,6 @@ function Home() {
           <StyledNavigationItem>
             <StyledLink href="#basic-link1">Send Money</StyledLink>
           </StyledNavigationItem>
-          {/* <StyledNavigationItem>
-            <StyledLink href="#basic-link2">View Ledger</StyledLink>
-          </StyledNavigationItem> */}
           <StyledNavigationItem>
             <StyledLink href="#basic-link2" onClick={getPayment}>
               View Transaction
@@ -169,16 +179,158 @@ function Home() {
       <HeadingXLarge
         color="secondary500"
         className={css({
+          marginBottom: '10px',
+        })}
+      >
+        Wallet Balance: ₦{walletBalance}
+      </HeadingXLarge>
+
+      <HeadingLarge
+        color="secondary500"
+        className={css({
           marginBottom: '20px',
         })}
       >
-        Wallet Balance! {walletBalance}
-      </HeadingXLarge>
+        Wallet Number: {walletNumber}
+      </HeadingLarge>
 
-      <FormControl label={() => 'label'} caption={() => 'caption'}>
-        <Input />
-      </FormControl>
+      <div
+        className="row"
+        style={{
+          display: 'flex',
+          padding: '10px',
+        }}
+      >
+        <Card
+          overrides={{
+            Root: {
+              style: {
+                width: '328px',
+                // padding: '20px',
+                marginBottom: '10px',
+                marginRight: '20px',
+                // marginTop: '100px',
+              },
+            },
+          }}
+          title="Fund wallet "
+        >
+          <form onSubmit={handleSubmit}>
+            <label>
+              Amount :
+              <input
+                type="number"
+                value={formValues.amount}
+                onChange={(e) =>
+                  setFormValues({ ...formValues, amount: e.target.value })
+                }
+              />
+            </label>
 
+            <label>
+              Reference:
+              <input
+                type="text"
+                value={formValues.reference}
+                onChange={(e) =>
+                  setFormValues({ ...formValues, reference: e.target.value })
+                }
+              />
+            </label>
+
+            <label>
+              Description:
+              <input
+                type="text"
+                value={formValues.description}
+                onChange={(e) =>
+                  setFormValues({ ...formValues, description: e.target.value })
+                }
+              />
+            </label>
+
+            <label>
+              Platform:
+              <select
+                value={formValues.platform}
+                onChange={(e) =>
+                  setFormValues({ ...formValues, platform: e.target.value })
+                }
+              >
+                <option value="">-- Select --</option>
+                <option value="Type A">Paystack</option>
+                <option value="Flutter">Flutter</option>
+              </select>
+            </label>
+            <br />
+            <br />
+            <button type="submit"> Submit</button>
+          </form>
+          <text style={{ color: 'red' }}>{error}</text>
+        </Card>
+
+        <Card
+          overrides={{
+            Root: {
+              style: {
+                width: '328px',
+                // padding: '20px',
+                marginBottom: '10px',
+                // marginTop: '100px',
+              },
+            },
+          }}
+          title="With from  wallet "
+        >
+          <form onSubmit={handleSubmitDebit}>
+            <label>
+              Amount :
+              <input
+                type="number"
+                value={formValuesDebit.amount}
+                onChange={(e) =>
+                  setFormValuesDebit({
+                    ...formValuesDebit,
+                    amount: e.target.value,
+                  })
+                }
+              />
+            </label>
+
+            <label>
+              Reference:
+              <input
+                type="text"
+                value={formValuesDebit.reference}
+                onChange={(e) =>
+                  setFormValuesDebit({
+                    ...formValuesDebit,
+                    reference: e.target.value,
+                  })
+                }
+              />
+            </label>
+
+            <label>
+              Receiver Wallet:
+              <input
+                type="text"
+                value={formValuesDebit.receiverWalletNumber}
+                onChange={(e) =>
+                  setFormValuesDebit({
+                    ...formValuesDebit,
+                    receiverWalletNumber: e.target.value,
+                  })
+                }
+              />
+            </label>
+            <br />
+            <br />
+
+            <button type="submit"> Submit</button>
+          </form>
+        </Card>
+      </div>
       <Table
         columns={[
           'S/N',
@@ -189,10 +341,6 @@ function Home() {
           'CreatedAt',
         ]}
         data={trans}
-        // data={[
-        //   ['Sarah Brown', 31, '100 Broadway St., New York City, New York'],
-        //   ['Jane Smith', 32, '100 Market St., San Francisco, California'],
-        // ]}
       />
     </ContainerHome>
   );

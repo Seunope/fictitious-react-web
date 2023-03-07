@@ -1,14 +1,5 @@
 import { Button } from 'baseui/button';
-import { Input } from 'baseui/input';
-import styled from 'styled-components';
-import {
-  HeadingXXLarge,
-  HeadingXLarge,
-  HeadingLarge,
-  HeadingMedium,
-  HeadingSmall,
-  HeadingXSmall,
-} from 'baseui/typography';
+import { HeadingXXLarge, HeadingXLarge } from 'baseui/typography';
 import {
   Container,
   ErrorText,
@@ -18,10 +9,10 @@ import {
 } from '../commons';
 import { StyledLink } from 'baseui/link';
 
-import { useSignIn } from 'react-auth-kit';
+import { useState } from 'react';
 import { useFormik } from 'formik';
 import axios, { AxiosError } from 'axios';
-import { useState } from 'react';
+import { useSignIn } from 'react-auth-kit';
 import { useNavigate } from 'react-router-dom';
 
 function Login(props: any) {
@@ -30,7 +21,6 @@ function Login(props: any) {
   const [error, setError] = useState('');
 
   const onSubmit = async (values: any) => {
-    console.log('Values: ', values);
     setError('');
 
     try {
@@ -38,9 +28,6 @@ function Login(props: any) {
         `${process.env.REACT_APP_BASE_URL}auth/login`,
         values
       );
-
-      console.log('GGG', response);
-      console.log('GYYYYYYYGG', response.data.token);
 
       signIn({
         token: response.data.token,
@@ -50,12 +37,9 @@ function Login(props: any) {
       });
       navigate('/');
     } catch (err) {
-      console.log('sdsdsds', err);
       if (err && err instanceof AxiosError)
         setError(err.response?.data.message);
       else if (err && err instanceof Error) setError(err.message);
-
-      console.log('Error: ', err);
     }
   };
 
